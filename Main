@@ -1,0 +1,821 @@
+Function Mids(Rg$, Str1$, Str2$) As String
+'Haøm taùch noäi dung töø chuoãi ngaên caùch bôûi hai nhoùm kyù töï
+Dim Rg1$, i%, n1%, n2%
+
+On Error GoTo GotoNext
+
+    If Str1 = "" And Str2 = "" Then
+        Mids = Rg
+        Exit Function
+    End If
+    
+    If Str1 = "" Then
+        For i = 1 To Len(Rg)
+            If Str2 = Mid(Rg, i, Len(Str2)) Then
+                n2 = i
+                Exit For
+            End If
+        Next i
+    Mids = Left(Rg, n2 - 1)
+    Exit Function
+    End If
+    
+    If Str2 = "" Then
+        For i = 1 To Len(Rg)
+            If Str1 = Mid(Rg, i, Len(Str1)) Then
+                n1 = i + Len(Str1)
+                Exit For
+            End If
+        Next i
+    Mids = Mid(Rg, n1)
+    Exit Function
+    End If
+    
+    For i = 1 To Len(Rg)
+            If Str1 = Mid(Rg, i, Len(Str1)) Then
+                n1 = i + Len(Str1)
+                Exit For
+            End If
+        Next i
+    
+    Rg1 = Mid(Rg, n1)
+    
+    For i = 1 To Len(Rg1)
+        If Str2 = Mid(Rg1, i, Len(Str2)) Then
+            n2 = i
+            Exit For
+        End If
+    Next i
+    Mids = Mid(Rg1, 1, n2 - 1)
+Exit Function
+GotoNext:     Mids = "-"
+End Function
+
+Function AddMark(Rg, Sep%, Optional ByVal Mark = " ") As String
+'Haøm theâm kyù töï vaøo chuoãi döïa treân vò trí thieát laäp tröôùc ñoù
+'[Rg]: Chuoãi - [Sep]: Soá kyù töï trong moãi nhoùm tröôùc khi theâm kyù töï khaùc
+Dim a, i
+a = Len(Rg)
+    If Sep <= 0 Or Sep = a Then
+        AddMark = Rg
+        Exit Function
+    End If
+a = a + Int(a / Sep)
+For i = 1 To a
+    If i = 1 Then
+        AddMark = AddMark & Mid(Rg, i, Sep)
+    Else
+        AddMark = AddMark & Mark & Mid(Rg, i, Sep)
+    End If
+    i = i + Sep - 1
+'If Len(AddMark) >= a Then Exit For
+Next
+AddMark = Mid(AddMark, 2)
+End Function
+
+Function UniqueWord(Rg$, Optional ByVal Mark As String = ",") As String
+'Haøm xoùa töø truøng trong chuoãi
+Dim a
+    With CreateObject("Scripting.Dictionary")
+        .CompareMode = vbTextCompare
+        For Each a In Split(Rg, Mark)
+            If Trim(a) <> "" And Not .Exists(Trim(a)) Then .Add Trim(a), Nothing
+        Next
+        If .Count > 0 Then UniqueWord = Join(.keys, Mark)
+    End With
+End Function
+
+Function UniqueChar(Rg$) As String
+'Haøm Xoùa kyù töï truøng trong chuoãi
+Dim Char$, xOutValue$, xDic As Object, i!
+Set xDic = CreateObject("Scripting.Dictionary")
+    For i = 1 To Len(Rg)
+        Char = Mid(Rg, i, 1)
+        If xDic.Exists(Char) Then
+        Else
+            xDic(Char) = ""
+            xOutValue = xOutValue & Char
+        End If
+    Next
+UniqueChar = xOutValue
+End Function
+
+Sub UniqueCharRanges(Optional Rgs As Range = Nothing)
+'Xoùa kyù töï truøng taïi vuøng choïn
+Dim Rg As Range, Sh As Worksheet
+
+    If Rgs Is Nothing Then
+        Set Rgs = ActiveSheet.UsedRange
+    End If
+
+    For Each Rg In Rgs
+        If Not Rg.HasFormula Or Rg.Value <> "" Then Rg = UniqueChar(Rg.Value)
+    Next Rg
+End Sub
+
+Sub UniqueWordRanges(Optional Rgs As Range = Nothing)
+'Xoùa töø truøng taïi vuøng choïn
+Dim Rg As Range, Sh As Worksheet
+
+    If Rgs Is Nothing Then
+        Set Rgs = ActiveSheet.UsedRange
+    End If
+
+    For Each Rg In Rgs
+        If Not Rg.HasFormula Or Rg.Value <> "" Then Rg = UniqueWord(Rg.Value, " ")
+    Next Rg
+End Sub
+
+Function FirstLetters(Rg As Range, Optional ByVal Types As Boolean = True) As String
+'Haøm laáy chöõ caùi ñaàu tieân cuûa moãi töø
+Dim Arr
+Dim i As Long
+Dim dtype$
+Arr = VBA.Split(Rg, " ")
+
+    If Rg = "" Then
+        FirstLetters = "-"
+        Exit Function
+    End If
+    
+'TH1. Boû daáu tieáng vieät
+    If Types = True Then
+        If IsArray(Arr) Then
+            For i = LBound(Arr) To UBound(Arr)
+                FirstLetters = FirstLetters & RemoveMark(Left(Arr(i), 1))
+            Next i
+        Else
+            FirstLetters = Left(Arr, 1)
+        End If
+        
+'TH2. Chaáp nhaän kyù töï tieáng Vieät
+    Else
+            If IsArray(Arr) Then
+            For i = LBound(Arr) To UBound(Arr)
+                FirstLetters = FirstLetters & Left(Arr(i), 1)
+            Next i
+        Else
+            FirstLetters = Left(Arr, 1)
+        End If
+    End If
+End Function
+
+Function RemoveMark(Content$, Optional ByVal Font As Byte = 1) As String
+'Haøm xoùa daáu tieáng Vieät
+Dim i%, sStr$, Dau$, Bdau$, a
+    Select Case Font
+    
+    Case 1: 'Xoa dau Font Unicode
+            Dau = ChrW(193) & ChrW(225) & ChrW(192) & ChrW(224) & ChrW(7842) & ChrW(7843) & ChrW(195) & ChrW(227) & ChrW(7840) & ChrW(7841) & ChrW(258) & ChrW(259) & _
+            ChrW(7854) & ChrW(7855) & ChrW(7856) & ChrW(7857) & ChrW(7858) & ChrW(7859) & ChrW(7860) & ChrW(7861) & ChrW(7862) & ChrW(7863) & ChrW(194) & ChrW(226) & _
+            ChrW(7844) & ChrW(7845) & ChrW(7846) & ChrW(7847) & ChrW(7848) & ChrW(7849) & ChrW(7850) & ChrW(7851) & ChrW(7852) & ChrW(7853) & ChrW(272) & ChrW(273) & _
+            ChrW(201) & ChrW(233) & ChrW(200) & ChrW(232) & ChrW(7866) & ChrW(7867) & ChrW(7868) & ChrW(7869) & ChrW(7864) & ChrW(7865) & ChrW(202) & ChrW(234) & ChrW(7870) & _
+            ChrW(7871) & ChrW(7872) & ChrW(7873) & ChrW(7874) & ChrW(7875) & ChrW(7876) & ChrW(7877) & ChrW(7878) & ChrW(7879) & ChrW(205) & ChrW(237) & ChrW(204) & _
+            ChrW(236) & ChrW(7880) & ChrW(7881) & ChrW(296) & ChrW(297) & ChrW(7882) & ChrW(7883) & ChrW(211) & ChrW(243) & ChrW(210) & ChrW(242) & ChrW(7886) & ChrW(7887) & _
+            ChrW(213) & ChrW(245) & ChrW(7884) & ChrW(7885) & ChrW(212) & ChrW(244) & ChrW(7888) & ChrW(7889) & ChrW(7890) & ChrW(7891) & ChrW(7892) & ChrW(7893) & ChrW(7894) & _
+            ChrW(7895) & ChrW(7896) & ChrW(7897) & ChrW(416) & ChrW(417) & ChrW(7898) & ChrW(7899) & ChrW(7900) & ChrW(7901) & ChrW(7902) & ChrW(7903) & ChrW(7904) & ChrW(7905) & _
+            ChrW(7906) & ChrW(7907) & ChrW(218) & ChrW(250) & ChrW(217) & ChrW(249) & ChrW(7910) & ChrW(7911) & ChrW(360) & ChrW(361) & ChrW(7908) & ChrW(7909) & ChrW(431) & _
+            ChrW(432) & ChrW(7912) & ChrW(7913) & ChrW(7914) & ChrW(7915) & ChrW(7916) & ChrW(7917) & ChrW(7918) & ChrW(7919) & ChrW(7920) & ChrW(7921) & ChrW(221) & ChrW(253) & _
+            ChrW(7922) & ChrW(7923) & ChrW(7926) & ChrW(7927) & ChrW(7928) & ChrW(7929) & ChrW(7924) & ChrW(7925)
+            Bdau = "AaAaAaAaAaAaAaAaAaAaAaAaAaAaAaAaAaDdEeEeEeEeEeEeEeEeEeEeEeIiIiIiIiIiOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoUuUuUuUuUuUuUuUuUuUuUuYyYyYyYyYy"
+                For i = 1 To Len(Content)
+                    If InStr(1, Dau, Mid(Content, i, 1)) > 0 Then
+                        sStr = sStr & Mid(Bdau, InStr(1, Dau, Mid(Content, i, 1)), 1)
+                    Else
+                        sStr = sStr & Mid(Content, i, 1)
+                    End If
+                Next i
+
+    Case 2: 'Xoa dau Font TCVN3 (ABC)
+            Dau = ChrW(184) & ChrW(181) & ChrW(7842) & ChrW(7843) & ChrW(183) & ChrW(7840) & ChrW(7841) & ChrW(161) & ChrW(168) & ChrW(7854) & _
+                ChrW(7855) & ChrW(7856) & ChrW(7857) & ChrW(7858) & ChrW(7859) & ChrW(7860) & ChrW(7861) & ChrW(7862) & ChrW(7863) & ChrW(162) & _
+                ChrW(169) & ChrW(7844) & ChrW(7845) & ChrW(7846) & ChrW(7847) & ChrW(7848) & ChrW(7849) & ChrW(7850) & ChrW(7851) & ChrW(7852) & _
+                ChrW(7853) & ChrW(272) & ChrW(273) & ChrW(208) & ChrW(204) & ChrW(7866) & ChrW(7867) & ChrW(7868) & ChrW(7869) & ChrW(7864) & _
+                ChrW(7865) & ChrW(163) & ChrW(170) & ChrW(7870) & ChrW(7871) & ChrW(7872) & ChrW(7873) & ChrW(7874) & ChrW(7875) & ChrW(7876) & _
+                ChrW(7877) & ChrW(214) & ChrW(7879) & ChrW(205) & ChrW(221) & ChrW(215) & ChrW(7880) & ChrW(7881) & ChrW(296) & ChrW(297) & ChrW(7882) & _
+                ChrW(222) & ChrW(227) & ChrW(223) & ChrW(7886) & ChrW(7887) & ChrW(226) & ChrW(7884) & ChrW(7885) & ChrW(164) & ChrW(171) & ChrW(7888) & _
+                ChrW(7889) & ChrW(7890) & ChrW(7891) & ChrW(7892) & ChrW(7893) & ChrW(7894) & ChrW(7895) & ChrW(7896) & ChrW(7897) & ChrW(416) & _
+                ChrW(417) & ChrW(7898) & ChrW(7899) & ChrW(7900) & ChrW(7901) & ChrW(235) & ChrW(7903) & ChrW(7904) & ChrW(7905) & ChrW(7906) & _
+                ChrW(7907) & ChrW(243) & ChrW(217) & ChrW(239) & ChrW(7910) & ChrW(7911) & ChrW(360) & ChrW(361) & ChrW(7908) & ChrW(7909) & ChrW(431) & _
+                ChrW(432) & ChrW(7912) & ChrW(7913) & ChrW(7914) & ChrW(7915) & ChrW(7916) & ChrW(7917) & ChrW(7918) & ChrW(7919) & ChrW(7920) & _
+                ChrW(7921) & ChrW(253) & ChrW(7922) & ChrW(7923) & ChrW(7926) & ChrW(7927) & ChrW(7928) & ChrW(7929) & ChrW(7924) & ChrW(7925)
+            Bdau = "aaAaaAaAaAaAaAaAaAaAaAaAaAaAaAaDdeeEeEeEeEeEeEeEeEeeeIiiIiIiIiooOooOoOoOoOoOoOoOoOoOoOoooOoOouUuUuUuUuUuUuUuUuUuUuyYyYyYyYy"
+                For i = 1 To Len(Content)
+                                a = Mid(Content, i, 1)
+                    If InStr(1, Dau, Mid(Content, i, 1)) > 0 Then
+                        sStr = sStr & Mid(Bdau, InStr(1, Dau, Mid(Content, i, 1)), 1)
+                    Else
+                        sStr = sStr & Mid(Content, i, 1)
+                    End If
+                Next i
+    
+        Case 3: 'Xoa dau Font Vni-Windows
+            Dau = ChrW(209) & ChrW(241) & ChrW(205) & ChrW(237) & ChrW(204) & ChrW(236) & ChrW(198) & ChrW(230) & ChrW(211) & ChrW(243) & ChrW(7882) & ChrW(242) & ChrW(212) & ChrW(244) & ChrW(214) & ChrW(246) & ChrW(206) & ChrW(238)
+            Bdau = "DdIiIiIiIiIiOoUuYy"
+                For i = 1 To Len(Content)
+                    If InStr(1, ",217,249,216,248,219,251,213,245,207,239,202,234,201,233,200,232,218,250,220,252,203,235,194,226,193,225,192,224,197,229,195,227,196,228,", "," & AscW(Mid(Content, i, 1)) & ",") = 0 Then
+                        If InStr(1, Dau, Mid(Content, i, 1)) > 0 Then
+                            sStr = sStr & Mid(Bdau, InStr(1, Dau, Mid(Content, i, 1)), 1)
+                        Else
+                            sStr = sStr & Mid(Content, i, 1)
+                        End If
+                    End If
+                Next i
+    
+    End Select
+    RemoveMark = sStr
+End Function
+ 
+Function StringIf(Delimiter$, Criteria As Variant, CriteriaRange As Range, ConcateRange As Range) As String
+'Haøm noái chuoãi coù ñieàu kieän
+'Ví duï : https://www.howtoexcel.org/vba/how-to-conditionally-concatenate-a-range/
+Dim Rg As Range
+On Error Resume Next
+StringIf = ""
+For Each Rg In CriteriaRange
+   If WorksheetFunction.CountIf(Rg, Criteria) Then
+      StringIf = StringIf & Delimiter & Rg.Offset(0, ConcateRange.Column - CriteriaRange.Column)
+   End If
+Next
+ StringIf = Mid(StringIf, Len(Delimiter) + 1, Len(StringIf))
+End Function
+
+Function ExtractCell(Rg As Range, Optional ByVal GetFormat% = 0)
+'Haøm taùch chuoãi
+Dim StringLength%, CellRef$, i!, Result, CheckStr, OutStr, Index, Index1, GetStr, p
+CellRef = Rg.Value
+StringLength = Len(CellRef)
+    
+    On Error Resume Next
+    Select Case GetFormat
+        Case 0 'Taùch chöõ
+            For i = 1 To StringLength
+                If Not (IsNumeric(Mid(CellRef, i, 1))) Then Result = Result & Mid(CellRef, i, 1)
+            Next
+        
+        Case 1 'Taùch soá
+            For i = 1 To StringLength
+                If IsNumeric(Mid(CellRef, i, 1)) Then Result = Result & Mid(CellRef, i, 1)
+            Next
+        
+        Case 2 'Email
+            Dim CharList$
+            CheckStr = "[A-Za-z0-9._-]"
+            OutStr = ""
+            Index = 1
+            Do While True
+                Index1 = VBA.InStr(Index, CellRef, "@")
+                GetStr = ""
+                If Index1 > 0 Then
+                    For p = Index1 - 1 To 1 Step -1
+                        If Mid(CellRef, p, 1) Like CheckStr Then
+                            GetStr = Mid(CellRef, p, 1) & GetStr
+                        Else
+                            Exit For
+                        End If
+                    Next
+                    GetStr = GetStr & "@"
+                    For p = Index1 + 1 To Len(CellRef)
+                        If Mid(CellRef, p, 1) Like CheckStr Then
+                            GetStr = GetStr & Mid(CellRef, p, 1)
+                        Else
+                            Exit For
+                        End If
+                    Next
+                    Index = Index1 + 1
+                    If OutStr = "" Then
+                        OutStr = GetStr
+                    Else
+                        OutStr = OutStr & Chr(10) & GetStr
+                    End If
+                Else
+                    Exit Do
+                End If
+            Loop
+            Result = OutStr
+        
+        Case 3 'Taùch Url
+            Dim x As Long, DotCount As Long
+            Dim Pat$, EndPat$, Parts() As String
+            Pat = "*[!&-;?-[_a-z~=!" & Chr$(1) & "]."
+            EndPat = "[!&-;?-[_a-z~=!" & Chr$(1) & "]*"
+            Parts = Split(CellRef)
+            Index = 1 'Laáy Url thöù 1 trong chuoãi
+            
+            For x = 0 To UBound(Parts)
+                If Parts(x) Like "*?.?*" Then
+                    DotCount = Len(Parts(x)) - Len(Replace(Parts(x), ".", ""))
+                    If " " & Replace(Parts(x), "]", Chr$(1)) & " " Like Application.Rept(Pat, DotCount) & EndPat Then Parts(x) = ""
+                Else
+                    Parts(x) = ""
+                End If
+              Next
+              
+              On Error GoTo IndexTooBig
+              ExtractCell = Split(Application.Trim(Join(Parts)))(Index - 1)
+              Exit Function
+IndexTooBig:
+              Result = ""
+          
+        Case 4 'Taùch ngaøy
+            Result = CDate(Mid(CellRef, InStr(1, CellRef, "/") - 2, 10))
+        
+        Case Else
+            Result = "-"
+        
+    End Select
+    
+    If Result = "" Then ExtractCell = "-" Else ExtractCell = Result
+End Function
+    
+Function ExtractName(Rg$, Optional ByVal GetFormat% = 1)
+'Haøm taùch chuoãi hoï teân
+Dim StringLength%, i%, Result$
+StringLength = Len(Rg)
+    
+    If Counts(Rg, " ") = 0 Then 'Teân chæ coù 1 töø
+        ExtractName = Rg
+        Exit Function
+    End If
+    
+    Select Case GetFormat
+    
+        Case 0 'Taùch hoï
+            For i = 1 To StringLength
+                If Mid(Rg, i, 1) = " " Then
+                    Exit For
+                End If
+            Next
+            If i <> 0 Then
+                Result = Trim(Mid(Rg, 1, i - 1))
+            Else
+                Result = Trim(Rg)
+            End If
+        
+        Case 1 'Taùch hoï + teân ñeäm
+            For i = StringLength To 1 Step -1
+                If Mid(Rg, i, 1) = " " Then
+                    Exit For
+                End If
+            Next
+            If i <> 0 Then
+                Result = Trim(Mid(Rg, 1, i - 1))
+            Else
+                Result = Trim(Rg)
+            End If
+        
+        Case 2 'Taùch teân ñeäm
+            If Counts(Rg, " ") = 1 Then 'Teân chæ coù 2 töø
+                For i = 1 To StringLength
+                    If Mid(Rg, i, 1) = " " Then
+                        Exit For
+                    End If
+                Next
+                If i <> 0 Then
+                    Result = Trim(Mid(Rg, 1, i - 1))
+                Else
+                    Result = Trim(Rg)
+                End If
+            End If
+            
+            If Counts(Rg, " ") > 1 Then 'Teân coù 3 chöõ trôû leân
+                Dim j, k As Long
+                StringLength = Len(Rg)
+                k = 0
+                For i = StringLength To 1 Step -1
+                    If Mid(Rg, i, 1) = " " Then
+                        Exit For
+                    End If
+                    k = k + 1
+                Next
+                For j = 1 To StringLength
+                    If Mid(Rg, j, 1) = " " Then
+                        Exit For
+                    End If
+                    k = k + 1
+                Next
+                If i <> 0 Then
+                    Result = Trim(Mid(Rg, j, StringLength - k))
+                Else
+                    Result = Trim(Rg)
+                End If
+            End If
+            
+        Case Else 'Taùch teân
+            For i = StringLength To 1 Step -1
+                If Mid(Rg, i, 1) = " " Then
+                    Exit For
+                End If
+            Next
+            If i <> 0 Then
+                Result = Trim(Mid(Rg, i + 1, StringLength - i))
+            Else
+                Result = Trim(Rg)
+            End If
+    End Select
+ExtractName = Result
+End Function
+
+Sub FormatPhone(Optional ByVal Types = 0)
+'Ñònh daïng soá ñieän thoaïi
+Dim Rg As Range, n, k%, Status As Boolean
+
+'Method = Application.InputBox(VniUni("Böôùc 1. Ñaûm baûo caáu truùc soá ñieän thoaïi ñaõ hôïp leä") & vbNewLine & _
+                                                               VniUni("V.duï: Di ñoäng phaûi 10 soá... ") & vbNewLine & vbNewLine & _
+                                                               VniUni("Böôùc 2. Choïn caùch hieån thò baèng caùch ñieàn caùc soá tuøy choïn sau : ") & vbNewLine & _
+                                                                "  [0] - 0901234567" & vbNewLine & "  [1] - 090 123 4567" & vbNewLine & "  [2] - 090.123.4567" & vbNewLine & _
+                                                                "  [3] - 090-123-4567" & vbNewLine & "  [4]- (093) 123 4567", VniUni("Ñònh daïng nhanh soá ñieän thoaïi"))
+    If MsgBoxUni(VniUni("Baïn coù theå choïn 1 hoaëc nhieàu oâ döõ lieäu tröôùc khi söû duïng tính naêng naøy. Hoaëc baám 'YES' ñeå thöïc hieän chuyeån ñoåi."), vbInformation + vbYesNo, VniUni(TitleNoitice)) = vbNo Then Exit Sub
+
+SpeedOn
+    Select Case Types
+        Case 0
+            n = ""
+        Case 1
+            n = " "
+        Case 2
+            n = "."
+        Case 3
+            n = "-"
+        Case 4
+            n = " "
+        Case Else
+            Exit Sub
+    End Select
+
+    For Each Rg In Selection
+        If Rg = "" Then
+            Exit For
+        End If
+        
+        Rg.NumberFormat = "@" ' Chuyeån veà ñònh daïng vaên baûn
+        Rg = WorksheetFunction.Substitute(Rg, " ", "")
+        Rg = WorksheetFunction.Substitute(Rg, "-", "")
+        Rg = WorksheetFunction.Substitute(Rg, "(", "")
+        Rg = WorksheetFunction.Substitute(Rg, ")", "")
+        Rg = WorksheetFunction.Substitute(Rg, ".", "")
+        
+        If Left(Rg, 1) = 0 Then
+           Status = True ' Ñònh daïng phone hôïp leä
+        Else
+            Status = False
+        End If
+
+        k = Len(Rg)
+        
+        If k = 9 Then 'Ñieän thoaïi di ñoäng thieáu soá 0 ñaàu
+            Rg = "'0" & Rg
+            Status = True
+        End If
+        
+        Select Case k
+            Case 8 'Ñieän thoaïi baøn
+                Rg = Left(Rg, 4) & n & Right(Rg, 4)
+                
+            Case 10 'Ñieän thoaïi di ñoäng hoaëc maõ vuøng 24 vaø 28
+                If Left(Rg, 2) = 24 Or Left(Rg, 2) = 28 Then
+                    If Types = 4 Then
+                        Rg = "(" & Left(Rg, 2) & ")" & n & Mid(Rg, 3, 4) & n & Right(Rg, 4)
+                    Else
+                        Rg = Left(Rg, 2) & n & Mid(Rg, 3, 4) & n & Right(Rg, 4)
+                            If Status = False Then
+                                Rg = "'0" & Rg
+                            End If
+                    End If
+               Else
+                    If Types = 4 Then
+                         Rg = "(" & Left(Rg, 3) & ")" & n & Mid(Rg, 4, 3) & n & Mid(Rg, 7)
+                    Else
+                        Rg = Left(Rg, 3) & n & Mid(Rg, 4, 3) & n & Mid(Rg, 7)
+                    End If
+                End If
+            Case Else 'Ñieän thoaïi coù maõ vuøng 3 chöõa soá
+                If Types = 4 Then
+                    Rg = "(" & Left(Rg, 3) & ")" & n & Mid(Rg, 4, 4) & n & Mid(Rg, 8)
+                Else
+                     Rg = Left(Rg, 3) & n & Mid(Rg, 4, 4) & n & Mid(Rg, 8)
+                End If
+        End Select
+    
+    Next
+SpeedOff
+Title = "Ñònh daïng soá ñieän thoaïi"
+Call InfoSuccess(Title)
+End Sub
+
+Sub FormatText()
+'Ñònh daïng chöõ
+    Selection.NumberFormat = "@"
+Title = "Chyeån ñoåi ñònh daïng vaên baûn"
+Call InfoSuccess(Title)
+End Sub
+
+Sub FormatNumber()
+'Ñònh daïng soá
+    Selection.WrapText = True
+    Selection.NumberFormat = "_(#,##0_);_ - #,##0_);_(""-""_)"
+Title = "Ñònh daïng chuaån keá toaùn"
+Call InfoSuccess(Title)
+End Sub
+
+Sub FormatDots()
+'Ñònh daïng soá
+    Selection.WrapText = True
+    Selection.NumberFormat = "@*."
+Title = "Ñònh daïng daáu chaám"
+MsgBoxUni VniUni("Baïn ñaõ choïn thaønh coâng!"), vbInformation, "Cty Taf|0939876641"
+End Sub
+
+Sub RemoveSpace(Optional Rgs As Range = Nothing)
+'Xoùa khoaûng traéng thöøa
+Dim Rg As Range, n!, i!
+    
+    If Rgs Is Nothing Then
+        Set Rgs = ActiveSheet.UsedRange
+    End If
+    
+    For Each Rg In Rgs
+        If Not Rg.HasFormula Then
+            n = Counts(Rg.Value, "  ")
+                For i = 1 To n
+                    Rg = Replace(Rg, "  ", " ")
+                Next i
+            Rg = Trim(Rg)
+        End If
+    Next Rg
+
+'Title = "Xoùa khoaûng traéng thöøa"
+Call InfoSuccess(Title)
+End Sub
+
+Function GetWord(Rg$, Optional ByVal stt! = 0, Optional ByVal Sep$ = " ")
+'Trích xuaát töø trong chuoãi theo vò trí cho tröôùc
+'[Rg]: Chuoãi - [Word]: Töø caàn xaùc ñònh vò trí trong chuoãi - [Display]: Hieån thò (0 = Vò trí gaàn nhaát, 1 = Lieät keâ caùc vò trí)
+Dim Words As Variant, i%
+Dim MatchesCount As Long: MatchesCount = 0
+        If Rg = "" Then GetWord = "-"
+    On Error Resume Next
+    GetWord = Split(Rg, Sep)(stt - 1)
+    If GetWord = Empty Then GetWord = "-"
+End Function
+
+Function WordPosition(Rg$, Word$, Optional ByVal Display% = 1)
+'Haøm xaùc ñònh vò trí cuûa töø trong moät caâu
+'[Rg]: Chuoãi - [Word]: Töø caàn xaùc ñònh vò trí trong chuoãi - [Display]: Hieån thò (0 = Vò trí gaàn nhaát, 1 = Lieät keâ caùc vò trí)
+Dim Words As Variant, i%
+Dim MatchesCount As Long: MatchesCount = 0
+    Words = Split(Rg, " ")
+        For i = LBound(Words, 1) To UBound(Words, 1)
+            If Words(i) = Word Then
+               MatchesCount = MatchesCount + 1
+               WordPosition = WordPosition & ", " & i + 1
+                    If Display = 0 Then Exit For
+            End If
+        Next i
+    WordPosition = Mid(WordPosition, 3)
+    If WordPosition = "" Then WordPosition = "-"
+End Function
+
+Function Countr(Rgs As Range, Character$) As Single
+'Haøm ñeám kyù töï trong vuøng choïn
+Dim Rg As Range
+Dim iResult As Long
+Dim sParts() As String
+    For Each Rg In Rgs
+        If Rg <> "" Then
+            sParts = Split(Rg.Value, Character)
+            iResult = UBound(sParts, 1)
+                If (iResult = -1) Then
+                    iResult = 0
+                End If
+            Countr = Countr + iResult
+        End If
+    Next Rg
+End Function
+
+Function Counts(Rgs$, Character$) As Single
+'Haøm ñeám kyù töï trong chuoãi
+Dim Rg As Range
+Dim iResult As Long
+Dim sParts() As String
+        sParts = Split(Rgs, Character)
+        iResult = UBound(sParts, 1)
+            If (iResult = -1) Then
+                iResult = 0
+            End If
+        Counts = Counts + iResult
+End Function
+
+Function Countw(Rgs As Range) As Single
+'Haøm ñeám soá töø trong vuøng choïn
+Dim Rg As Range
+Dim RgWords!, Content$, TotalWords!
+RgWords = 0
+TotalWords = 0
+    For Each Rg In Rgs
+        If Not Rg.HasFormula And Rg <> "" Then
+            Content = Rg.Value
+            Content = Trim(Content)
+            If Content = "" Then
+                RgWords = 0
+            Else
+                RgWords = 1
+            End If
+            Do While InStr(Content, " ") > 0
+                Content = Mid(Content, InStr(Content, " "))
+                Content = Trim(Content)
+                RgWords = RgWords + 1
+            Loop
+            Countw = Countw + RgWords
+        End If
+    Next Rg
+End Function
+
+Sub LowerCase(Optional ByVal Rgs)
+Dim Rg
+
+SpeedOn
+    If IsMissing(Rgs) = True Then
+        Set Rgs = Selection
+    End If
+    
+    For Each Rg In Rgs
+        If WorksheetFunction.IsText(Rg) Then
+            Rg.Value = LCase(Rg)
+        End If
+    Next
+SpeedOff
+'Title = "Chyeån ñoåi ñònh daïng chöõ"
+'Call InfoSuccess(Title)
+End Sub
+
+Sub UpperCase(Optional ByVal Rgs)
+Dim Rg As Range
+
+SpeedOn
+    If IsMissing(Rgs) = True Then
+        Set Rgs = Selection
+    End If
+    
+    For Each Rg In Rgs
+        If WorksheetFunction.IsText(Rg) Then
+            Rg.Value = UCase(Rg)
+        End If
+    Next
+SpeedOff
+'Title = "Chyeån ñoåi ñònh daïng chöõ"
+'Call InfoSuccess(Title)
+End Sub
+
+Sub ProperCase(Optional Rgs As Range = Nothing)
+Dim Rg, Temp$
+
+    If Rgs Is Nothing Then
+        Set Rgs = Selection
+    End If
+    
+    For Each Rg In Rgs
+        Temp = ""
+        If Rg.HasFormula = True Then
+            Temp = "'" & CStr(Rg.Formula)
+            Temp = Replace(Temp, " &", "&")
+            Temp = Replace(Temp, "& ", "&")
+            Temp = Replace(Temp, ChrW(34), "  ")
+            Temp = StrConv(Temp, vbProperCase)
+            Temp = Replace(Temp, "  ", ChrW(34))
+            Temp = Replace(Temp, ChrW(34) & ChrW(34), ChrW(34) & " " & ChrW(34))
+            Temp = Replace(Temp, "'", "")
+            Rg.Value = Temp
+        End If
+        
+        If WorksheetFunction.IsText(Rg) Then
+            Rg.Value = WorksheetFunction.Proper(Rg.Value)
+        End If
+    Next
+'Title = "Chyeån ñoåi ñònh daïng chöõ"
+'Call InfoSuccess(Title)
+End Sub
+
+Sub SentenceCase(Optional ByVal Rgs)
+Dim Rg
+
+SpeedOn
+    If IsMissing(Rgs) = True Then
+        Set Rgs = Selection
+    End If
+    
+    For Each Rg In Rgs
+        If WorksheetFunction.IsText(Rg) Then
+            Rg.Value = UCase(Left(Rg, 1)) & LCase(Right(Rg, Len(Rg) - 1))
+        End If
+    Next
+SpeedOff
+'Title = "Chyeån ñoåi ñònh daïng chöõ"
+'Call InfoSuccess(Title)
+End Sub
+
+Sub RemoveMarkRange(Optional ByVal Rgs)
+'Xoùa daáu tieáng Vieät
+Dim Rg
+
+SpeedOn
+    If IsMissing(Rgs) = True Then
+        Set Rgs = Selection
+    End If
+
+    For Each Rg In Rgs
+            If WorksheetFunction.IsText(Rg) Then
+                Rg.Value = RemoveMark(Rg.Value)
+            End If
+    Next
+SpeedOff
+Title = "Xoùa kyù töï tieáng Vieät"
+Call InfoSuccess(Title)
+End Sub
+
+Function CountLines(Rg) As Integer
+'Haøm ñeám xuoáng haøng
+Dim xStrLen As Double
+Dim xChrLen As Double
+    xStrLen = Len(Rg)
+    xChrLen = Len(Replace(Rg, Chr(10), ""))
+    CountLines = xStrLen - xChrLen
+End Function
+
+Function ClearLineBreaks(Rg$, Optional ByVal Types = 0)
+'Haøm boû xuoáng doøng
+'[Type]: Caùch thöùc (0 = Xoùa doøng troáng, 1 = Xoùa xuoáng doøng)
+Dim xArr() As String, i
+xArr = Split(Rg, Chr(10))
+    
+    If Rg = "" Then
+        ClearLineBreaks = "-"
+        Exit Function
+    End If
+ 
+    If Types = 0 Then
+        For i = LBound(xArr()) To UBound(xArr())
+            If Trim(xArr(i)) <> "" Then
+                ClearLineBreaks = ClearLineBreaks & xArr(i) & vbCrLf
+            End If
+        Next i
+        
+        If Right$(ClearLineBreaks, 2) = vbCrLf Or Right$(ClearLineBreaks, 2) = vbNewLine Then
+            ClearLineBreaks = Left$(ClearLineBreaks, Len(ClearLineBreaks) - 2)
+        End If
+    End If
+    
+    If Types = 1 Then
+        For i = LBound(xArr()) To UBound(xArr())
+            If Trim(xArr(i)) <> "" Then
+                ClearLineBreaks = ClearLineBreaks & xArr(i) & " "
+            End If
+        Next i
+            ClearLineBreaks = Trim(Replace(ClearLineBreaks, Chr(160), " "))
+    End If
+End Function
+
+Function ReverseText(Text$) As String
+'Haøm ñaûo choãi kyù töï töø abc thaønh cba
+Dim sReverse As String
+    If Text = "" Then
+        ReverseText = "-"
+        Exit Function
+    End If
+    
+    sReverse = StrReverse(Text)
+    ReverseText = sReverse
+End Function
+
+Function Randoms(Optional ByVal Length! = 1, Optional ByVal Types As Integer = 0)
+'Haøm taïo chuoãi giaù trò ngaãu nhieân
+'[Length]: Soá kyù töï, [Types]: Kyù töï töï do-0, Kyù töï soá-1, Kyù töï chöõ-2
+Dim CharacterBank As Variant
+Dim x As Long
+Dim str As String
+
+    'Neáu soá kyù töï nhoû hôn 1
+      If Length < 1 Then
+        Randoms = 0
+        Exit Function
+      End If
+      
+    Select Case Types
+         Case 0 'Kyù töï töï do
+            CharacterBank = Array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", _
+                                                        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "!", "@", "#", "$", "%", "^", "&", "*", _
+                                                        "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
+        
+         Case 1 'Kyù töï soá
+            CharacterBank = Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+          
+        Case Else 'Kyù töï chöõ
+            CharacterBank = Array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
+    End Select
+    
+      For x = 1 To Length
+      Call Randomize
+        str = str & CharacterBank(Int((UBound(CharacterBank) - LBound(CharacterBank) + 1) * Rnd + LBound(CharacterBank)))
+      Next x
+      Randoms = str
+End Function
