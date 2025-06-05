@@ -1,0 +1,26 @@
+Private Sub CommandButton1_Click()
+    Dim Arr, SoPhong&, aRow&, i&, j&, k&, n&, d&
+    
+    Sheet2.Activate
+    If Me.TextBox1 = "" Then Exit Sub
+    If Me.TextBox1 <= 0 Then Exit Sub
+    SoPhong = Me.TextBox1.Value
+
+    aRow = Range("C" & Rows.Count).End(xlUp).Row
+    If aRow < 9 Then Exit Sub
+    Arr = Range("C9:C" & aRow).Value
+    aRow = UBound(Arr, 1)
+    n = aRow \ SoPhong + 1 ' So thi sinh nguyen
+    d = aRow Mod SoPhong 'So thi sinh le
+
+  For i = 1 To SoPhong
+    If d = 0 Then n = n - 1
+    For j = 1 To n
+      k = k + 1
+      Arr(k, 1) = "P " & i
+    Next j
+    d = d - 1
+  Next i
+    Range("h9").Resize(aRow, 1).Value = Arr
+    MsgBox "Da chia phong thanh cong!", vbOKOnly + vbInformation, "Thong bao"
+End Sub
