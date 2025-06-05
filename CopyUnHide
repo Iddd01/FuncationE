@@ -1,0 +1,19 @@
+Option Explicit
+Sub ExportB()
+Dim ws As Worksheet
+Dim dic As Object, key
+Set dic = CreateObject("Scripting.Dictionary")
+For Each ws In Sheets
+    If ws.Visible = xlSheetVisible Then dic.Add ws.Name, ""
+Next
+Sheets(dic.keys).Copy
+With ActiveWorkbook
+    For Each ws In .Sheets
+        With ws.Rows("1:30")
+            .Copy
+            .PasteSpecial Paste:=xlPasteValues
+        End With
+    Next
+    .SaveAs ThisWorkbook.Path & Application.PathSeparator & "For send to site.xlsm", 52
+End With
+End Sub
